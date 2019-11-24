@@ -2,7 +2,9 @@ package ua.edu.ucu.tries;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
@@ -13,30 +15,92 @@ public class RWayTrie implements Trie, Serializable{
     private static final long serialVersionUID = 1005553152697567957L;
 
     public final static int ALPHABET = 26;
-
+    
     public class TrieNode implements Serializable
     {
         private static final long serialVersionUID = 1L;
         public int weight = 0;
         private TrieNode[] children = new TrieNode[ALPHABET];
         private TrieNode parent = null;
-
+        
         public TrieNode(TrieNode parent)
         {
             this.parent = parent;
         }
-
+        
         public int getWeight() 
         {
             return weight;
         }
-
+        
         public void setWeight(int weight) 
         {
             this.weight = weight;
         }  
     } 
     private TrieNode root = new TrieNode(null);
+    
+    public class TrieIterator implements Iterator<String>
+    {
+        TrieNode currentPtr;
+        Queue bfsQueue;
+
+        public TrieIterator(TrieNode root)
+        {
+            this.currentPtr = root;
+            this.bfsQueue = new Queue();
+            bfsQueue.enqueue(currentPtr);
+            moveToNext();
+        }
+
+        // //Return a pointer to
+        // private TrieNode findNext()
+        // {
+                //To be implemented.
+        // }
+
+        //Change the pointer to the next word
+        private TrieNode moveToNext()
+        {
+            while(!(bfsQueue.isEmpty()))
+            {
+                currentPtr = (TrieNode) bfsQueue.dequeue();
+                for (int i = 0; i < ALPHABET; i++)
+                {
+                    if (currentPtr.children[i] != null)
+                    {
+                        bfsQueue.enqueue(currentPtr.children[i]);
+                    }
+                }
+                if (currentPtr.weight != 0)
+                {
+
+                    return currentPtr;
+                }
+            }
+            currentPtr = null;
+            return currentPtr;
+        }
+
+        @Override
+        public String next()
+        {
+            //TrieNode tempPtr = moveToNext();
+            if (currentPtr == null)
+            {
+                return null;
+            }
+            String currentString = readWord(currentPtr, currentPtr.weight);
+            moveToNext();
+            return currentString;
+        
+        }
+        public boolean hasNext()
+        {
+            return this.currentPtr != null;
+        }
+
+    }
 
     @Override
     public void add(Tuple t) 
@@ -130,27 +194,23 @@ public class RWayTrie implements Trie, Serializable{
     
     public Iterable<String> rootWords(TrieNode root) 
     {
-        List<String> words = new ArrayList<String>();
-        Queue bfsQueue = new Queue();
-        TrieNode currentPtr = root;
-        bfsQueue.enqueue(currentPtr);
-        while(!(bfsQueue.isEmpty()))
-        {
-            currentPtr = (TrieNode) bfsQueue.dequeue();
-            for (int i = 0; i < ALPHABET; i++)
-            {
-                if (currentPtr.children[i] != null)
-                {
-                    bfsQueue.enqueue(currentPtr.children[i]);
-                }
-            }
-            if (currentPtr.weight != 0)
-            {
-                words.add(readWord(currentPtr, currentPtr.weight));
-            }
-        }
 
-        return words;
+        return new Iterable<String>()
+        {
+            @Override
+            public Iterator<String> iterator() 
+            {
+                return new TrieIterator(root);
+            }
+            @Override
+            public String toString()
+            {
+                StringJoiner result = new StringJoiner(", ", "[", "]");
+                this.forEach(result::add);
+                return result.toString();
+            }
+        };
+        
     }
 
     public String readWord(TrieNode pointer, int length)

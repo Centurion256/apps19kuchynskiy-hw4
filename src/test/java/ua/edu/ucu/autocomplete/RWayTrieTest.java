@@ -42,8 +42,8 @@ public class RWayTrieTest
 
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testWordsIteratorFail()
+    @Test
+    public void testWordsIteratorNoNext()
     {
         RWayTrie rv = new RWayTrie();
         Iterable<String> iterable = rv.words();
@@ -54,7 +54,7 @@ public class RWayTrieTest
         {
             assertEquals(iter.next(), expResult[i++]);
         }
-        iter.next();
+        assertEquals(iter.hasNext(), false);
 
     }
     @Test
@@ -87,8 +87,16 @@ public class RWayTrieTest
         rv.add(new Tuple("world", 5));
         //TrieNode ptr = rv.find("hello");
         Iterable<String> result = rv.words();
-        List<String> expected = new ArrayList<String>(Arrays.asList("hello", "world"));
-        assertEquals(expected, result);
+        int i = 0;
+        String[] expected = {"hello", "world"};
+        for (String word : result)
+        {
+            System.out.printf("actual:%s\n", word);
+            assertEquals(expected[i], word);
+            i++;
+        }
+        //List<String> expected = new ArrayList<String>(Arrays.asList("hello", "world"));
+        //assertEquals(result, containsInAnyOrder(expected));
     }
     @Test
     public void testDelete()
@@ -103,7 +111,7 @@ public class RWayTrieTest
         assertTrue("sea has been removed", rv.contains("sea") == false);
         Iterable<String> result = rv.words();
         List<String> expected = new ArrayList<String>(Arrays.asList("hello", "world", "seashells"));
-        assertEquals(expected, result);
+        assertEquals(expected.toString(), result.toString());
     }
     @Test
     public void testPrefixWords()
@@ -114,8 +122,8 @@ public class RWayTrieTest
         rv.add(new Tuple("sea", 3));
         rv.add(new Tuple("seashells", 9));
         Iterable<String> result = rv.wordsWithPrefix("sea");
-        List<String> expected = new ArrayList<String>(Arrays.asList("sea", "seashells"));
-        assertEquals(expected, result);
+        List<String> expected = new ArrayList<>(Arrays.asList("sea", "seashells"));
+        assertEquals(expected.toString(), result.toString());
     }
     @Test
     public void testNoPrefixWords()
