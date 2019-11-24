@@ -1,7 +1,9 @@
 package ua.edu.ucu.autocomplete;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,12 +63,31 @@ public class PrefixMatches {
         return trie.delete(word);
     }
 
-    public Iterable<String> wordsWithPrefix(String pref) {
-        throw new UnsupportedOperationException("Not supported yet.");        
+    public Iterable<String> wordsWithPrefix(String pref) 
+    {
+        return trie.wordsWithPrefix(pref);     
     }
 
-    public Iterable<String> wordsWithPrefix(String pref, int k) {
-        throw new UnsupportedOperationException("Not supported yet.");        
+    public Iterable<String> wordsWithPrefix(String pref, int k) 
+    {
+        Set<Integer> lengths = new HashSet<>();
+        List<String> words = new ArrayList<>(); 
+        int wordlen;
+        for (String word : wordsWithPrefix(pref))
+        {
+            if (k == 0)
+            {
+                break;
+            }
+            wordlen = word.length();
+            if (!lengths.contains(wordlen))
+            {
+                k--;
+                lengths.add(wordlen);
+            }
+            words.add(word);
+        }
+        return words;
     }
 
     public int size() 

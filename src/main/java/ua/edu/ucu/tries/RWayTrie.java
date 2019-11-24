@@ -3,6 +3,7 @@ package ua.edu.ucu.tries;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 import ua.edu.ucu.utils.collections.Queue;
@@ -10,7 +11,7 @@ import ua.edu.ucu.utils.collections.Queue;
 public class RWayTrie implements Trie, Serializable{
     
     private static final long serialVersionUID = 1005553152697567957L;
-    
+
     public final static int ALPHABET = 26;
 
     public class TrieNode implements Serializable
@@ -53,7 +54,7 @@ public class RWayTrie implements Trie, Serializable{
         }
         currentPtr.setWeight(t.weight);
     }
-    public TrieNode find(String word)
+    public TrieNode find(String word, Predicate predicate)
     {
         int currentIndex;
         TrieNode currentPtr = root;
@@ -66,7 +67,12 @@ public class RWayTrie implements Trie, Serializable{
                 return null;
             }
         }
-        return currentPtr.weight != 0 ? currentPtr : null;
+        //return currentPtr;
+        return predicate.test(currentPtr) ? currentPtr : null;
+    }
+    public TrieNode find(String word)
+    {
+        return find(word, (n) -> ((TrieNode) n).weight != 0);
     }
 
     @Override
@@ -86,12 +92,35 @@ public class RWayTrie implements Trie, Serializable{
         deletionPtr.setWeight(0); //A node with 0 weight is not a terminal one
         //which means that we don't have to delete all nodes.
         //It would still be useful to clean up unnecessary nodes to optimize BST.
+        cleanUp(deletionPtr);
         return true;
     }
     //Clears all redundant nodes (i.e. nodes that do not eventually end in a word) along a sequence
-    private void cleanUp(String sequence) 
+    private void cleanUp(TrieNode node) 
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        TrieNode ptr = node.parent;
+        while ((ptr.weight == 0) && (ptr.parent != null))
+        {
+            ptr = ptr.parent;
+        }
+        if (!rootWords(ptr).iterator().hasNext())
+        {
+            for (int i = 0; i < ALPHABET; i++)
+            {
+            ptr.children[i] = null;
+            }
+        }
+
+        //Older version:
+        // if (!rootWords(node).iterator().hasNext())
+        // {
+        //     TrieNode ptr = node.parent;
+        //     ptr.children[prev_node] //we need to find it somehow
+        //     while (ptr.weight == 0)
+        //     {
+                
+        //     }
+        // }
     }
     @Override
     public Iterable<String> words() 
@@ -153,7 +182,7 @@ public class RWayTrie implements Trie, Serializable{
     @Override
     public Iterable<String> wordsWithPrefix(String s) 
     {
-        TrieNode prefixRoot = find(s);
+        TrieNode prefixRoot = find(s, (n) -> true);
         if (prefixRoot == null)
         {
             return new ArrayList<String>();

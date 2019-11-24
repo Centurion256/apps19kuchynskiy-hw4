@@ -16,11 +16,11 @@ public class PrefixMatchesITTest {
 
     private PrefixMatches pm;
 
-    // @Before
-    // public void init() {
-    //     pm = new PrefixMatches(new RWayTrie());
-    //     pm.load("abc", "abce", "abcd", "abcde", "abcdef");
-    // }
+    @Before
+    public void init() {
+        pm = new PrefixMatches(new RWayTrie());
+        pm.load("abc", "abce", "abcd", "abcde", "abcdef");
+    }
 
     @Test
     public void testLoad()
