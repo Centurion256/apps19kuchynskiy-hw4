@@ -2,8 +2,10 @@ package ua.edu.ucu.autocomplete;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +25,51 @@ public class PrefixMatches {
         this.trie = trie;
     }
 
+    public class SmartIterator implements Iterator<String>
+    {
+        Iterator<String> allWords;
+        Set<Integer> lengths;
+        int amount;
+        String pointer;
+
+        public SmartIterator(Iterator<String> allWords, int k)
+        {
+            this.allWords = allWords;
+            this.lengths = new HashSet<>();
+            this.amount = k;
+            this.pointer = null;
+            moveToNext();
+        }
+        private String moveToNext()
+        {
+            if (allWords.hasNext() && amount > 0)
+            {
+                String word = allWords.next();
+                int wordlen = word.length();
+                if (!lengths.contains(wordlen))
+                {
+                    amount--;
+                    lengths.add(wordlen);
+                }
+                pointer = word;
+                return pointer;
+            }
+            pointer = null;
+            return pointer;
+        }
+        public String next()
+        {
+            String currentString = pointer;
+            moveToNext();
+            return currentString;
+        }
+        public boolean hasNext()
+        {
+            return pointer != null;
+        }
+
+    }
+    
     public int load(String... strings) 
     {
         int count = 0;
@@ -38,7 +85,8 @@ public class PrefixMatches {
                     count++;
                 }
             }
-
+            
+            //A faster approach, using Matcher and Patterns: 
             // if (current.matches("^[a-z]{3,}$"))
             // {
             //     if (current.matches("\\s{1,}"))
@@ -52,6 +100,9 @@ public class PrefixMatches {
         }
         return count;       
     }
+
+
+
 
     public boolean contains(String word) 
     {
@@ -70,24 +121,21 @@ public class PrefixMatches {
 
     public Iterable<String> wordsWithPrefix(String pref, int k) 
     {
-        Set<Integer> lengths = new HashSet<>();
-        List<String> words = new ArrayList<>(); 
-        int wordlen;
-        for (String word : wordsWithPrefix(pref))
+        return new Iterable<String>()
         {
-            if (k == 0)
+            @Override
+            public Iterator<String> iterator() 
             {
-                break;
+                return new SmartIterator(trie.wordsWithPrefix(pref).iterator(), k);
             }
-            wordlen = word.length();
-            if (!lengths.contains(wordlen))
+            @Override
+            public String toString()
             {
-                k--;
-                lengths.add(wordlen);
+                StringJoiner result = new StringJoiner(", ", "[", "]");
+                this.forEach(result::add);
+                return result.toString();
             }
-            words.add(word);
-        }
-        return words;
+        };
     }
 
     public int size() 
